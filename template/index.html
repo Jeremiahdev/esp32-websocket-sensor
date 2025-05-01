@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Sensor & Image Stream</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .data-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px auto;
+            width: 200px;
+        }
+        img {
+            width: 300px;
+            height: auto;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>ESP32 Sensor Data & Live Image</h1>
+    
+    <div class="data-box">
+        <h3>Temperature: <span id="temp">--</span> °F</h3>
+        <h3>Humidity: <span id="humidity">--</span> %</h3>
+    </div>
+    
+    <h2>Latest Image</h2>
+    <img id="image" src="/latest-image" alt="No Image Yet">
+    
+    <script>
+      let ws = new WebSocket("ws://192.168.1.116:8765");
+
+ws.onopen = () => {
+    console.log("WebSocket connected!");
+};
+
+ws.onmessage = (event) => {
+    console.log("WebSocket message:", event.data);
+    // You don't actually need WebSocket messages for updating the UI right now.
+};
+
+// Refresh image every 5 seconds
+setInterval(() => {
+    document.getElementById("image").src = "/latest-image?" + new Date().getTime();
+}, 5000);
+
+// Refresh sensor data every 5 seconds
+setInterval(() => {
+    fetch("/sensor-data")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("temp").innerText = data.temperature ?? "--";
+            document.getElementById("humidity").innerText = data.humidity ?? "--";
+        })
+        .catch(err => console.error("Error fetching sensor data:", err));
+}, 5000);      
+    </script>
+</body>
+</html>
